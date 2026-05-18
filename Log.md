@@ -4,3 +4,6 @@ Set up toolchain and created GitHub repo. Cloned repo locally. Getting used to G
 ## May 14 2026
 Completed research phase. Finalized spec sheet for the smart gloves project.
 
+## May 18 2026
+Finalized component specs and ordered all parts.
+
