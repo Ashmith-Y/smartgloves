@@ -1,104 +1,67 @@
-/**
- * imu_spi_dual.ino
- * Dual LSM6DSOX simultaneous SPI test for Smart Boxing Glove project.
- * Verifies two IMU units running in parallel on a shared VSPI bus.
- *
- * Hardware
- *   MCU   : ESP32-DevKitC-32E
- *   IMU 1 : LSM6DSOX (Adafruit #4438) — SPI, CS on GPIO 5
- *   IMU 2 : LSM6DSOX (Adafruit #4438) — SPI, CS on GPIO 17
- *
- * SPI wiring (shared bus, individual chip-selects)
- *   SCK  → GPIO 18  (both units)
- *   MOSI → GPIO 23  (both units)
- *   MISO → GPIO 19  (both units)
- *   CS1  → GPIO 5   (Unit 1 only)
- *   CS2  → GPIO 17  (Unit 2 only)
- *   SA0  → GND      (must be tied LOW on each Adafruit breakout to select SPI mode)
- *
- * Libraries (install via Arduino Library Manager)
- *   • Adafruit LSM6DS           (by Adafruit)
- *   • Adafruit Unified Sensor   (by Adafruit, dependency of above)
- *   • Adafruit BusIO            (by Adafruit, dependency of above)
- *
- * Board support
- *   • ESP32 Arduino core ≥ 2.0  (Boards Manager → "esp32" by Espressif)
- *   • Target board: "ESP32 Dev Module"
- */
-
-#include <SPI.h>
 #include <Adafruit_LSM6DSOX.h>
+#include <SPI.h>
 
-// Shared VSPI bus pins
-#define IMU_SCK  18
-#define IMU_MOSI 23
-#define IMU_MISO 19
+#define LSM_SCK   18
+#define LSM_MISO  19
+#define LSM_MOSI  23
+#define LSM_CS1   5   // Unit 1
+#define LSM_CS2   17  // Unit 2
 
-// Per-unit chip-select pins
-#define IMU1_CS   5
-#define IMU2_CS  17
-
-// Adafruit Unified Sensor returns accel in m/s²; divide to get g
-static constexpr float G_TO_MS2 = 9.80665f;
-
-Adafruit_LSM6DSOX imu1;
-Adafruit_LSM6DSOX imu2;
+Adafruit_LSM6DSOX sox1;
+Adafruit_LSM6DSOX sox2;
 
 void setup() {
   Serial.begin(115200);
-  delay(2000);  // allow USB-serial bridge to enumerate
+  while (!Serial) delay(10);
 
-  SPI.begin(IMU_SCK, IMU_MISO, IMU_MOSI);
-
-  if (!imu1.begin_SPI(IMU1_CS, &SPI)) {
-    Serial.println("IMU 1 (CS=5) not found — check wiring");
-    while (true) { delay(1000); }
+  // Init Unit 1
+  if (!sox1.begin_SPI(LSM_CS1, LSM_SCK, LSM_MISO, LSM_MOSI)) {
+    Serial.println("FAILED: Unit 1 not found");
+    while (1) delay(10);
   }
-  Serial.println("IMU 1 (CS=5)  found!");
+  sox1.setAccelRange(LSM6DS_ACCEL_RANGE_16_G);
+  sox1.setGyroRange(LSM6DS_GYRO_RANGE_2000_DPS);
+  sox1.setAccelDataRate(LSM6DS_RATE_208_HZ);
+  sox1.setGyroDataRate(LSM6DS_RATE_208_HZ);
+  Serial.println("Unit 1 OK");
 
-  if (!imu2.begin_SPI(IMU2_CS, &SPI)) {
-    Serial.println("IMU 2 (CS=17) not found — check wiring");
-    while (true) { delay(1000); }
+  // Init Unit 2
+  if (!sox2.begin_SPI(LSM_CS2, LSM_SCK, LSM_MISO, LSM_MOSI)) {
+    Serial.println("FAILED: Unit 2 not found");
+    while (1) delay(10);
   }
-  Serial.println("IMU 2 (CS=17) found!");
-
-  imu1.setAccelRange(LSM6DS_ACCEL_RANGE_16_G);
-  imu1.setAccelDataRate(LSM6DS_RATE_208_HZ);
-  imu1.setGyroRange(LSM6DS_GYRO_RANGE_2000_DPS);
-  imu1.setGyroDataRate(LSM6DS_RATE_208_HZ);
-
-  imu2.setAccelRange(LSM6DS_ACCEL_RANGE_16_G);
-  imu2.setAccelDataRate(LSM6DS_RATE_208_HZ);
-  imu2.setGyroRange(LSM6DS_GYRO_RANGE_2000_DPS);
-  imu2.setGyroDataRate(LSM6DS_RATE_208_HZ);
-
-  Serial.println("Config: accel ±16 g @ 208 Hz | gyro ±2000 dps @ 208 Hz");
-  Serial.println("Unit\tax(g)\tay(g)\taz(g)");
+  sox2.setAccelRange(LSM6DS_ACCEL_RANGE_16_G);
+  sox2.setGyroRange(LSM6DS_GYRO_RANGE_2000_DPS);
+  sox2.setAccelDataRate(LSM6DS_RATE_208_HZ);
+  sox2.setGyroDataRate(LSM6DS_RATE_208_HZ);
+  Serial.println("Unit 2 OK");
 }
 
 void loop() {
-  sensors_event_t accel, gyro, temp;
+  sensors_event_t accel1, gyro1, temp1;
+  sensors_event_t accel2, gyro2, temp2;
 
-  imu1.getEvent(&accel, &gyro, &temp);
-  float ax1 = accel.acceleration.x / G_TO_MS2;
-  float ay1 = accel.acceleration.y / G_TO_MS2;
-  float az1 = accel.acceleration.z / G_TO_MS2;
+  sox1.getEvent(&accel1, &gyro1, &temp1);
+  sox2.getEvent(&accel2, &gyro2, &temp2);
 
-  imu2.getEvent(&accel, &gyro, &temp);
-  float ax2 = accel.acceleration.x / G_TO_MS2;
-  float ay2 = accel.acceleration.y / G_TO_MS2;
-  float az2 = accel.acceleration.z / G_TO_MS2;
+  // Unit 1
+  Serial.print("U1 | ");
+  Serial.print(accel1.acceleration.x); Serial.print(",");
+  Serial.print(accel1.acceleration.y); Serial.print(",");
+  Serial.print(accel1.acceleration.z); Serial.print(" | ");
+  Serial.print(gyro1.gyro.x); Serial.print(",");
+  Serial.print(gyro1.gyro.y); Serial.print(",");
+  Serial.println(gyro1.gyro.z);
 
-  Serial.print("1\t");
-  Serial.print(ax1, 3);  Serial.print('\t');
-  Serial.print(ay1, 3);  Serial.print('\t');
-  Serial.println(az1, 3);
+  // Unit 2
+  Serial.print("U2 | ");
+  Serial.print(accel2.acceleration.x); Serial.print(",");
+  Serial.print(accel2.acceleration.y); Serial.print(",");
+  Serial.print(accel2.acceleration.z); Serial.print(" | ");
+  Serial.print(gyro2.gyro.x); Serial.print(",");
+  Serial.print(gyro2.gyro.y); Serial.print(",");
+  Serial.println(gyro2.gyro.z);
 
-  Serial.print("2\t");
-  Serial.print(ax2, 3);  Serial.print('\t');
-  Serial.print(ay2, 3);  Serial.print('\t');
-  Serial.println(az2, 3);
-
-  // ~208 Hz → ~4.8 ms per sample; 5 ms gives a touch of headroom
+  Serial.println("---");
   delay(5);
 }

@@ -29,3 +29,27 @@ Firmware completed:
 
 Blocked on: IMU delivery — cannot test or complete initIMU(), readFIFO(), or any sensor code until hardware arrives.
 
+## May 26 2026
+
+Both LSM6DSOX units arrived. Soldered header pins onto both breakout boards.
+
+Hardware verified:
+- Both units confirmed working independently via SPI at 208 Hz
+- Both units confirmed working simultaneously on shared VSPI bus (Unit 1 CS=GPIO 5, Unit 2 CS=GPIO 17)
+- One ESP32 confirmed broadcasting over BLE as 'Glove1' using NimBLE — Serial Monitor shows "IMU OK" and "BLE broadcasting as Glove1"
+
+Laptop BLE reception not yet verified (ble_receiver.py written but not tested end-to-end).
+
+Firmware written and tested today:
+- firmware/tests/imu_spi_single/ — single-unit SPI test, streams timestamp + accel + gyro CSV at ~200 Hz
+- firmware/tests/imu_spi_dual/   — dual-unit simultaneous SPI test, streams U1/U2 accel + gyro at ~200 Hz
+- firmware/ble/First_BLE_test/   — Glove1 NimBLE broadcast: IMU data packed as 6 floats (24 bytes) and notified at ~200 Hz
+
+Receiver written:
+- receiver/ble_receiver.py — Python/bleak script that scans for 'Glove1', connects, and prints incoming IMU notifications
+
+Next steps:
+- Verify laptop can receive BLE notifications from Glove1 (run ble_receiver.py)
+- Flash second ESP32 as Glove2, verify both can be received simultaneously
+- Begin integrating First_BLE_test logic into the main smartglove_firmware skeleton (initIMU, readFIFO, sendBLE)
+
