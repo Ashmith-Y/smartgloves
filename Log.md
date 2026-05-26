@@ -29,6 +29,9 @@ Firmware completed:
 
 Blocked on: IMU delivery — cannot test or complete initIMU(), readFIFO(), or any sensor code until hardware arrives.
 
+## May 22 2026
+IMUs arrived. Verified first unit responds over I2C (imu_i2c_test.ino) — confirmed sensor is functional before moving to SPI.
+
 ## May 26 2026
 
 Both LSM6DSOX units arrived. Soldered header pins onto both breakout boards.
