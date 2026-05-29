@@ -69,3 +69,24 @@ Next steps:
 - Flash second ESP32 as Glove2 and verify simultaneous dual-glove reception
 - Begin integrating verified BLE logic into main smartglove_firmware skeleton (initIMU, readFIFO, sendBLE)
 
+## May 29 2026
+
+Completed simultaneous BLE streaming from both gloves with real IMU data. Phase 2 Week 4 goal complete.
+
+Hardware:
+- ESP1 (GloveLeft) and ESP2 (GloveRight) each wired to one LSM6DSOX via SPI on GPIO 5
+- Both ESPs broadcasting NimBLE simultaneously
+
+Firmware:
+- One IMU per ESP, 208 Hz, ±4g accel, 1000 dps gyro
+- BLE packet: 24 bytes = 6 floats (gx, gy, gz, ax, ay, az)
+- Only notifies when client is connected (crash fix applied)
+
+Receiver:
+- ble_dual_glove.py updated to parse real float data from both gloves simultaneously
+- Confirmed live IMU data printing correctly labeled LEFT/RIGHT
+
+Next steps:
+- Integrate punch event detection into firmware: onset threshold >3g, 400ms capture window
+- Hard deadline: Jun 4 2026
+
