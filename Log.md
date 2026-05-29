@@ -56,3 +56,16 @@ Next steps:
 - Flash second ESP32 as Glove2, verify both can be received simultaneously
 - Begin integrating First_BLE_test logic into the main smartglove_firmware skeleton (initIMU, readFIFO, sendBLE)
 
+## May 28 2026
+
+Completed end-to-end BLE broadcasting verification.
+
+Verified:
+- ESP32 advertising as 'Glove1' via NimBLE confirmed working on the laptop side
+- Laptop successfully receiving 48-byte IMU data packets over BLE using Python/Bleak
+- Full pipeline confirmed: IMU → SPI → ESP32 → NimBLE → laptop
+
+Next steps:
+- Flash second ESP32 as Glove2 and verify simultaneous dual-glove reception
+- Begin integrating verified BLE logic into main smartglove_firmware skeleton (initIMU, readFIFO, sendBLE)
+
