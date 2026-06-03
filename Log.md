@@ -90,3 +90,7 @@ Next steps:
 - Integrate punch event detection into firmware: onset threshold >3g, 400ms capture window
 - Hard deadline: Jun 4 2026
 
+## Jun 3 2026
+
+Received all CAD files needed for the project.
+
